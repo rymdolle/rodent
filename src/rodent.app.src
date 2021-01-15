@@ -1,0 +1,16 @@
+{application, rodent,
+ [{description, "Gopher server"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, {rodent_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    ranch
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["Apache 2.0"]},
+  {links, []}
+ ]}.
