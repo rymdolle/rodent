@@ -2,7 +2,7 @@
 
 -export([start/0]).
 -export([format/2]).
--export([info/2, file/3, menu/3, bin/3, html/3, error/2]).
+-export([info/2, file/3, menu/3, bin/3, url/3, error/2]).
 -export([send/2]).
 
 start() ->
@@ -35,7 +35,7 @@ menu(Name, Selector, #{host := Host, port := Port}) ->
 bin(Name, Selector, #{host := Host, port := Port}) ->
     encode($9, Name, Selector, Host, Port).
 
-html(Name, Target, #{host := Host, port := Port}) ->
+url(Name, Target, #{host := Host, port := Port}) ->
     encode($h, Name, ["URL:",Target], Host, Port).
 
 error(Message, #{host := Host, port := Port}) ->
