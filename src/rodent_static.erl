@@ -4,13 +4,23 @@
 
 -export([init/2]).
 
+init(Req = #{selector := <<"URL:",Link/bytes>>}, _) ->
+    Data = ["<!DOCTYPE html>\n",
+            "<html><head>\n",
+            "<meta http-equiv='refresh' content='5;URL=", Link, "' />\n",
+            "</head>\n",
+            "<body><a href='", Link, "'>", Link, "</a>\n",
+            "</body></html>\n"
+           ],
+    {ok, Data, Req};
 init(Req, {priv_file, Application, Name}) ->
     Dir = code:priv_dir(Application),
     File = filename:join(Dir, Name),
     case file:read_file_info(File) of
         {ok, #file_info{type = regular, mtime = MTime}} ->
             Time = io_lib:format("Last edit: ~p", [MTime]),
-            {ok, format_file(File, Req) ++ [rodent:info(Time, Req)], Req}
+            GitHub = rodent:url("github.com/rymdolle", "https://github.com/rymdolle", Req),
+            {ok, format_file(File, Req) ++ [GitHub, rodent:info(Time, Req)], Req}
     end.
 
 format_file(File, State) ->

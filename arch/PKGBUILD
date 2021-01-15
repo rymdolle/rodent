@@ -9,7 +9,7 @@ makedepends=("make")
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}/${pkgver}.tar.gz"
         "rodent.service"
         "rodent.sysusers")
-sha256sums=('0da5cfcf8baf03b5dab0e7255222480b042b4eeb5b1b33586418ab26a6a1249e'
+sha256sums=('f19db242e6236b4b689e0bbebc96beff7bc57784267b9693af6e26127886f814'
             '168fdaa8c9cd0621ca59516b2ebf175db9862d29e92966e5ba834dce67fd78a7'
             '58537bc63cece28cd1da951122099259c427029854042e88e1a1d43f3bc10bb8')
 
