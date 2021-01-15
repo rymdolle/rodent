@@ -17,10 +17,8 @@ init(Req, {priv_file, Application, Name}) ->
     Dir = code:priv_dir(Application),
     File = filename:join(Dir, Name),
     case file:read_file_info(File) of
-        {ok, #file_info{type = regular, mtime = MTime}} ->
-            Time = io_lib:format("Last edit: ~p", [MTime]),
-            GitHub = rodent:url("github.com/rymdolle", "https://github.com/rymdolle", Req),
-            {ok, format_file(File, Req) ++ [GitHub, rodent:info(Time, Req)], Req}
+        {ok, #file_info{type = regular}} ->
+            {ok, format_file(File, Req), Req}
     end.
 
 format_file(File, State) ->
@@ -36,5 +34,5 @@ format_device(Device, State) ->
             [];
         {ok, Line} ->
             Part = binary:part(Line, 0, byte_size(Line)-1),
-            [rodent:info(Part, State) | format_device(Device, State)]
+            [rodent:format(Part, State), "\r\n" | format_device(Device, State)]
     end.
