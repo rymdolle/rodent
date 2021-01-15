@@ -8,8 +8,9 @@ init(Req, {priv_file, Application, Name}) ->
     Dir = code:priv_dir(Application),
     File = filename:join(Dir, Name),
     case file:read_file_info(File) of
-        {ok, #file_info{type = regular}} ->
-            {ok, format_file(File, Req), Req}
+        {ok, #file_info{type = regular, mtime = MTime}} ->
+            Time = io_lib:format("Last edit: ~p", [MTime]),
+            {ok, format_file(File, Req) ++ [rodent:info(Time, Req)], Req}
     end.
 
 format_file(File, State) ->
