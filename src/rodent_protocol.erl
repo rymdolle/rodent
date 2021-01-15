@@ -71,6 +71,7 @@ parse_query(<<>>, Acc, State) ->
 
 
 select(State) ->
+    log(State),
     case rodent_static:init(State, {priv_file, rodent, "index.txt"}) of
         {ok, Data, Req} ->
             rodent:send(Data, Req),
@@ -78,6 +79,12 @@ select(State) ->
     end.
 
 search(State) ->
-    Data = rodent:info("Not implemented", State),
+    log(State),
+    Data = rodent:error("Not implemented", State),
     rodent:send(Data, State),
     {stop, normal, State}.
+
+log(Req = #{selector := Selector, socket := Socket, transport := Transport}) ->
+    Query = maps:get(query, Req, <<>>),
+    {ok, {Address, Port}} = Transport:peername(Socket),
+    logger:notice("~s:~b ~s ~s", [inet:ntoa(Address), Port, Selector, Query]).
