@@ -1,0 +1,23 @@
+pkgname=rodent
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="rodent gopher server"
+arch=("any")
+url="https://github.com/rymdolle/${pkgname}"
+depends=("erlang-nox")
+makedepends=("make")
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}/${pkgver}.tar.gz"
+        "rodent.service"
+        "rodent.sysusers")
+sha256sums=('0da5cfcf8baf03b5dab0e7255222480b042b4eeb5b1b33586418ab26a6a1249e'
+            '168fdaa8c9cd0621ca59516b2ebf175db9862d29e92966e5ba834dce67fd78a7'
+            '58537bc63cece28cd1da951122099259c427029854042e88e1a1d43f3bc10bb8')
+
+package() {
+    mkdir -p "${pkgdir}/usr/lib/${pkgname}"
+    cp -r bin lib releases "${pkgdir}/usr/lib/${pkgname}"
+    mkdir -p "${pkgdir}/usr/bin"
+    ln -s "/usr/lib/${pkgname}/bin/rodent" "${pkgdir}/usr/bin/rodent"
+    install -Dm 644 ${pkgname}.sysusers "${pkgdir}/usr/lib/sysusers.d/${pkgname}.conf"
+    install -Dm 644 ${pkgname}.service -t "${pkgdir}/usr/lib/systemd/system"
+}

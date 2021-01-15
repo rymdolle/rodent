@@ -1,0 +1,12 @@
+[Unit]
+Description=Rodent gopher server
+Documentation=http://github.com/rymdolle/rodent
+After=network.target
+
+[Service]
+User=gopher
+ExecStart=/usr/bin/rodent foreground
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
