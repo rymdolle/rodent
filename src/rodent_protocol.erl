@@ -89,14 +89,31 @@ select(State = #{selector := <<"URL:", Target/bytes>>}) ->
     {stop, normal, State};
 select(State = #{selector := <<>>}) ->
     select(State#{selector := <<"/">>});
-select(State = #{selector := <<"/">>}) ->
-    {ok, Data} = rodent_static:init(State, {priv_file, rodent, "index.txt"}),
-    rodent:send([Data, ".\r\n"], State),
-    {stop, normal, State};
-select(State) ->
-    Data = rodent:error("Not found", State),
-    rodent:send([Data, ".\r\n"], State),
-    {stop, normal, State}.
+select(State = #{selector := Selector, routes := Routes}) ->
+    case match(Selector, Routes) of
+        nomatch ->
+            Data = rodent:error("Not found", State),
+            rodent:send([Data, ".\r\n"], State),
+            {stop, normal, State};
+        #{callback := {Module, Options}} ->
+            try Module:init(State, Options) of
+                {ok, Data} ->
+                    rodent:send([Data, ".\r\n"], State),
+                    {stop, normal, State};
+                ok ->
+                    {stop, normal, State}
+            catch Error:Reason:Stacktrace ->
+                    Data = rodent:error("Internal error", State),
+                    rodent:send([Data, ".\r\n"], State),
+                    erlang:raise(Error, Reason, Stacktrace)
+            end
+    end.
+
+match(_Path, []) -> nomatch;
+match(Path, [Route|_]) when map_get(path, Route) == Path ->
+    Route;
+match(Path, [_|Rest]) ->
+    match(Path, Rest).
 
 search(State) ->
     Data = rodent:error("Not implemented", State),
