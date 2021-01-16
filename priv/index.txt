@@ -10,5 +10,7 @@ i (O,O)		%h	%p
 i (   ) under construction		%h	%p
 i -"-"---------------------		%h	%p
 i		%h	%p
-1rodent	/git/rodent.git	%h	%p
+1rodent git	/git/rodent.git	%h	%p
+9rodent.tar	/git/rodent.git/archive/rodent.tar	%h	%p
+i		%h	%p
 hgithub.com/rymdolle	URL:https://github.com/rymdolle	%h	%p

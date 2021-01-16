@@ -9,6 +9,14 @@ init(Req = #{path := [<<>>]}, _Dir) ->
     {ok, rodent:error("Not found", Req)};
 init(Req = #{path := [Name]}, Dir) ->
     init(Req#{path => [Name, "master^{tree}"]}, Dir);
+init(Req = #{path := [Name, <<"archive">>, _]}, Dir) ->
+    Repo = filename:join(Dir, Name),
+    case filelib:is_dir(Repo) of
+        true ->
+            {ok, tar(Repo)};
+        false ->
+            {ok, rodent:error("Not found", Req)}
+    end;
 init(Req = #{path := [Name, Id]}, Dir) ->
     Repo = filename:join(Dir, Name),
     case filelib:is_dir(Repo) of
@@ -40,17 +48,16 @@ header(Req) ->
      rodent:info("", Req)].
 
 tree(Repo, Id) ->
-    Base = io_lib:format("git -C ~s cat-file", [Repo]),
-    case os:cmd(io_lib:format("~s -t ~s", [Base, Id])) of
+    case os:cmd(io_lib:format("git -C ~s cat-file -t ~s", [Repo, Id])) of
         "tree" ++ _ ->
-            Data = os:cmd(io_lib:format("~s -p ~s", [Base, Id])),
+            Data = os:cmd(io_lib:format("git -C ~s ls-tree ~s", [Repo, Id])),
             {menu, [begin
                         [Info, File] = string:lexemes(Line, "\t"),
                         [Permission, Type, Obj] = string:lexemes(Info, " "),
                         {Repo, File, Type, Obj, Permission}
                     end || Line <- re:split(Data, <<"\n">>), byte_size(Line) > 0]};
         "blob" ++ _ ->
-            {file, os:cmd(io_lib:format("~s -p ~s", [Base, Id]))};
+            {file, os:cmd(io_lib:format("git -C ~s cat-file -p ~s", [Repo, Id]))};
         _ ->
             error
     end.
@@ -64,3 +71,8 @@ format_tree([{Repo, File, Type, Id, _Permission}|Rest], State) ->
             [rodent:file(File, Path, State)|format_tree(Rest, State)]
     end;
 format_tree([], _State) -> [].
+
+tar(Repo) ->
+    Command = io_lib:format("git -C ~s archive --format tar --prefix ~s/ master",
+                            [Repo, filename:rootname(filename:basename(Repo))]),
+    os:cmd(Command).
