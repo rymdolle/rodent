@@ -4,22 +4,18 @@
 
 -export([init/2]).
 
-init(Req = #{selector := <<"URL:",Link/bytes>>}, _) ->
-    Data = ["<!DOCTYPE html>\n",
-            "<html><head>\n",
-            "<meta http-equiv='refresh' content='5;URL=", Link, "' />\n",
-            "</head>\n",
-            "<body><a href='", Link, "'>", Link, "</a>\n",
-            "</body></html>\n"
-           ],
-    {ok, Data, Req};
 init(Req, {priv_file, Application, Name}) ->
     Dir = code:priv_dir(Application),
     File = filename:join(Dir, Name),
     case file:read_file_info(File) of
         {ok, #file_info{type = regular}} ->
-            {ok, format_file(File, Req), Req}
-    end.
+            {ok, format_file(File, Req)}
+    end;
+init(Req, {priv_dir, Application}) ->
+    init(Req, {priv_dir, Application, ""});
+init(_Req, {priv_dir, _Application, _Dir}) ->
+    ok.
+
 
 format_file(File, State) ->
     case file:open(File, [read, binary]) of

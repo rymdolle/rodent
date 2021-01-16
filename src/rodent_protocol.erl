@@ -40,12 +40,16 @@ handle_info({tcp, Socket, Data}, State = #{socket := Socket}) ->
     Buffer = maps:get(buffer, State),
     parse(State#{buffer => <<Buffer/bytes, Data/bytes>>}).
 
-terminate(_Reason, #{}) ->
+terminate(normal, State) ->
+    access_log(State);
+terminate(_Reason, _State) ->
     ok.
 
 
 %%% Internal functions
 
+parse(State = #{query := Query, buffer := Buffer}) ->
+    parse_query(Buffer, Query, State);
 parse(State = #{selector := Selector, buffer := Buffer}) ->
     parse_selector(Buffer, Selector, State);
 parse(State = #{buffer := Buffer}) ->
@@ -69,22 +73,40 @@ parse_query(<<C, Rest/bytes>>, Acc, State) ->
 parse_query(<<>>, Acc, State) ->
     {noreply, State#{buffer => Acc}}.
 
-
-select(State) ->
-    log(State),
-    case rodent_static:init(State, {priv_file, rodent, "index.txt"}) of
-        {ok, Data, Req} ->
-            rodent:send(Data, Req),
-            {stop, normal, Req}
-    end.
-
-search(State) ->
-    log(State),
-    Data = rodent:error("Not implemented", State),
+select(State = #{selector := <<"URL:", Target/bytes>>}) ->
+    Data =
+        ["<!DOCTYPE html>\n"
+         "<html>\n"
+         "  <head>\n"
+         "    <title>redirect<title/>\n"
+         "    <meta http-equiv='refresh' content='1; url=", Target, "' />\n"
+         "  </head>\n"
+         "  <body>\n"
+         "    <a href='", Target, "'>", Target, "</a>\n"
+         "  </body>\n"
+         "</html>\n"],
     rodent:send(Data, State),
+    {stop, normal, State};
+select(State = #{selector := <<>>}) ->
+    select(State#{selector := <<"/">>});
+select(State = #{selector := <<"/">>}) ->
+    {ok, Data} = rodent_static:init(State, {priv_file, rodent, "index.txt"}),
+    rodent:send([Data, ".\r\n"], State),
+    {stop, normal, State};
+select(State) ->
+    Data = rodent:error("Not found", State),
+    rodent:send([Data, ".\r\n"], State),
     {stop, normal, State}.
 
-log(Req = #{selector := Selector, socket := Socket, transport := Transport}) ->
+search(State) ->
+    Data = rodent:error("Not implemented", State),
+    rodent:send([Data, ".\r\n"], State),
+    {stop, normal, State}.
+
+access_log(Req = #{selector := Selector, socket := Socket, transport := Transport}) ->
     Query = maps:get(query, Req, <<>>),
     {ok, {Address, Port}} = Transport:peername(Socket),
-    logger:notice("~s:~b ~s ~s", [inet:ntoa(Address), Port, Selector, Query]).
+    {ok, [{send_oct, TX}]} = Transport:getstat(Socket, [send_oct]),
+    {ok, [{recv_oct, RX}]} = Transport:getstat(Socket, [recv_oct]),
+    logger:notice("~15s:~-5b rx:~b tx:~b ~s ~s",
+                  [inet:ntoa(Address), Port, RX, TX, Selector, Query]).
