@@ -95,19 +95,27 @@ select(State = #{selector := Selector, routes := Routes}) ->
             Data = rodent:error("Not found", State),
             rodent:send([Data, ".\r\n"], State),
             {stop, normal, State};
-        #{callback := {Module, Options}} ->
-            try Module:init(State, Options) of
-                {ok, Data} ->
-                    rodent:send([Data, ".\r\n"], State),
-                    {stop, normal, State};
-                ok ->
-                    {stop, normal, State}
-            catch Error:Reason:Stacktrace ->
-                    Data = rodent:error("Internal error", State),
-                    rodent:send([Data, ".\r\n"], State),
-                    erlang:raise(Error, Reason, Stacktrace)
-            end
+        Route ->
+            Module = maps:get(callback, Route),
+            Options = maps:get(options, Route, undefined),
+            call(Module, Options, State)
     end.
+
+call(Module, Options, State) ->
+    try Module:init(State, Options) of
+        {ok, Data} ->
+            rodent:send([Data, ".\r\n"], State),
+            {stop, normal, State};
+        ok ->
+            {stop, normal, State};
+        {swap, NewModule, NewOptions} ->
+            call(NewModule, NewOptions, State)
+    catch Error:Reason:Stacktrace ->
+            Data = rodent:error("Internal error", State),
+            rodent:send([Data, ".\r\n"], State),
+            erlang:raise(Error, Reason, Stacktrace)
+    end.
+
 
 match(_Path, []) -> nomatch;
 match(Path, [Route|_]) when map_get(path, Route) == Path ->
