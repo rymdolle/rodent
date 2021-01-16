@@ -90,7 +90,8 @@ select(State = #{selector := <<"URL:", Target/bytes>>}) ->
 select(State = #{selector := <<>>}) ->
     select(State#{selector := <<"/">>});
 select(State = #{selector := Selector, routes := Routes}) ->
-    case match(Selector, Routes) of
+    Path = re:split(Selector, "/"),
+    case match(Path, Routes) of
         nomatch ->
             Data = rodent:error("Not found", State),
             rodent:send([Data, ".\r\n"], State),
@@ -98,13 +99,13 @@ select(State = #{selector := Selector, routes := Routes}) ->
         Route ->
             Module = maps:get(callback, Route),
             Options = maps:get(options, Route, undefined),
-            call(Module, Options, State)
+            call(Module, Options, State#{path => maps:get(path, Route)})
     end.
 
 call(Module, Options, State) ->
     try Module:init(State, Options) of
         {ok, Data} ->
-            rodent:send([Data, ".\r\n"], State),
+            rodent:send(Data, State),
             {stop, normal, State};
         ok ->
             {stop, normal, State};
@@ -117,11 +118,20 @@ call(Module, Options, State) ->
     end.
 
 
-match(_Path, []) -> nomatch;
-match(Path, [Route|_]) when map_get(path, Route) == Path ->
-    Route;
-match(Path, [_|Rest]) ->
-    match(Path, Rest).
+match(Path, [Route|Rest]) ->
+    case match_path(maps:get(path, Route), Path) of
+        false ->
+            match(Path, Rest);
+        {true, PathInfo} ->
+            Route#{path => PathInfo}
+    end;
+match(_Path, []) -> nomatch.
+
+match_path([P|Path], [P|Route]) ->
+    match_path(Path, Route);
+match_path([], PathInfo) -> {true, PathInfo};
+match_path(_, _) -> false.
+
 
 search(State) ->
     Data = rodent:error("Not implemented", State),
