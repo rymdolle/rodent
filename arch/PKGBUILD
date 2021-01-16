@@ -9,7 +9,6 @@ makedepends=("make")
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}/${pkgver}.tar.gz"
         "rodent.service"
         "rodent.sysusers")
-backup=(etc/rodent.config)
 sha256sums=('SKIP'
             '168fdaa8c9cd0621ca59516b2ebf175db9862d29e92966e5ba834dce67fd78a7'
             '58537bc63cece28cd1da951122099259c427029854042e88e1a1d43f3bc10bb8')
@@ -24,7 +23,7 @@ package() {
 
     # Config file
     mkdir -p "${pkgdir}/etc"
-    ln -s "/usr/lib/${pkgname}/releases/${p}/sys.config" "${pkgdir}/etc/rodent.config"
+    ln -s "/usr/lib/${pkgname}/releases/${pkgver}/sys.config" "${pkgdir}/etc/rodent.config"
 
     install -Dm 644 ${pkgname}.sysusers "${pkgdir}/usr/lib/sysusers.d/${pkgname}.conf"
     install -Dm 644 ${pkgname}.service -t "${pkgdir}/usr/lib/systemd/system"
