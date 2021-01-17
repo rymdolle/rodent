@@ -11,7 +11,7 @@ source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}/${pkgver}.tar.gz"
         "rodent.service"
         "rodent.sysusers")
 sha256sums=('SKIP'
-            '168fdaa8c9cd0621ca59516b2ebf175db9862d29e92966e5ba834dce67fd78a7'
+            '2189d95f143940f12d7e73f3450e43aca60b7f609cf4959aba2f29394083b128'
             '58537bc63cece28cd1da951122099259c427029854042e88e1a1d43f3bc10bb8')
 
 package() {
