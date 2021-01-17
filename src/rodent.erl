@@ -39,7 +39,7 @@ url(Name, Target, #{host := Host, port := Port}) ->
     encode($h, Name, ["URL:",Target], Host, Port).
 
 error(Message, #{host := Host, port := Port}) ->
-    encode($3, Message, "", Host, Port).
+    io_lib:format("3~s\t\t~s\t~b\r\n.\r\n", [Message, Host, Port]).
 
 send({sendfile, Offset, Size, File}, #{socket := Socket, transport := Transport}) ->
     Transport:sendfile(Socket, File, Offset, Size);

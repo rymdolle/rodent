@@ -6,6 +6,7 @@ arch=("any")
 url="https://github.com/rymdolle/${pkgname}"
 depends=("erlang-nox")
 makedepends=("make")
+backup=("etc/$pkgname.conf")
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}/${pkgver}.tar.gz"
         "rodent.service"
         "rodent.sysusers")
@@ -23,7 +24,8 @@ package() {
 
     # Config file
     mkdir -p "${pkgdir}/etc"
-    ln -s "/usr/lib/${pkgname}/releases/${pkgver}/sys.config" "${pkgdir}/etc/rodent.config"
+    mv "${pkgdir}/usr/lib/${pkgname}/releases/${pkgver}/sys.config" "${pkgdir}/etc/rodent.conf"
+    ln -fs  "/etc/rodent.conf" "${pkgdir}/usr/lib/${pkgname}/releases/${pkgver}/sys.config"
 
     install -Dm 644 ${pkgname}.sysusers "${pkgdir}/usr/lib/sysusers.d/${pkgname}.conf"
     install -Dm 644 ${pkgname}.service -t "${pkgdir}/usr/lib/systemd/system"

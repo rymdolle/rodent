@@ -102,12 +102,12 @@ select(State = #{selector := Selector, routes := Routes}) ->
     case match(Path, Routes) of
         nomatch ->
             Data = rodent:error("Not found", State),
-            rodent:send([Data, ".\r\n"], State),
+            rodent:send(Data, State),
             {stop, normal, State};
         Route ->
             Module = maps:get(callback, Route),
-            Options = maps:get(options, Route, undefined),
-            call(Module, Options, State#{path => maps:get(path, Route)})
+            Args = maps:get(args, Route, undefined),
+            call(Module, Args, State#{path => maps:get(path, Route)})
     end.
 
 format_file(File, State) ->
@@ -137,15 +137,17 @@ call(Module, Options, State) ->
             call(NewModule, NewOptions, State)
     catch Error:Reason:Stacktrace ->
             Data = rodent:error("Internal error", State),
-            rodent:send([Data, ".\r\n"], State),
+            rodent:send(Data, State),
             erlang:raise(Error, Reason, Stacktrace)
     end.
 
 
 match(Path, [Route|Rest]) ->
-    case match_path(maps:get(path, Route), Path) of
+    case match_path(Path, maps:get(path, Route)) of
         false ->
             match(Path, Rest);
+        true ->
+            Route;
         {true, PathInfo} ->
             Route#{path => PathInfo}
     end;
@@ -153,13 +155,14 @@ match(_Path, []) -> nomatch.
 
 match_path([P|Path], [P|Route]) ->
     match_path(Path, Route);
-match_path([], PathInfo) -> {true, PathInfo};
+match_path([], []) -> true;
+match_path(Path, [<<"*">>]) -> {true, Path};
 match_path(_, _) -> false.
 
 
 search(State) ->
     Data = rodent:error("Not implemented", State),
-    rodent:send([Data, ".\r\n"], State),
+    rodent:send(Data, State),
     {stop, normal, State}.
 
 access_log(Req = #{selector := Selector, socket := Socket, transport := Transport}) ->
@@ -167,5 +170,5 @@ access_log(Req = #{selector := Selector, socket := Socket, transport := Transpor
     {ok, {Address, Port}} = Transport:peername(Socket),
     {ok, [{send_oct, TX}]} = Transport:getstat(Socket, [send_oct]),
     {ok, [{recv_oct, RX}]} = Transport:getstat(Socket, [recv_oct]),
-    logger:notice("~15s:~-5b rx:~b tx:~b ~s ~s",
+    logger:notice("~15s:~-5b rx:~b,tx:~b ~s ~s",
                   [inet:ntoa(Address), Port, RX, TX, Selector, Query]).
