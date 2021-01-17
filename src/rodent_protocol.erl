@@ -119,9 +119,9 @@ select(State = #{selector := Selector, routes := Routes}) ->
             rodent:send(Data, State),
             {stop, normal, State};
         Route ->
-            Module = maps:get(callback, Route),
+            Callback = maps:get(callback, Route),
             Args = maps:get(args, Route, undefined),
-            call(Module, Args, State#{path => maps:get(path, Route)})
+            call(Callback, Args, State#{path => maps:get(path, Route)})
     end.
 
 format_file(File, State) ->
@@ -140,8 +140,10 @@ format_device(Device, State) ->
             [rodent:format(Part, State), "\r\n" | format_device(Device, State)]
     end.
 
-call(Module, Options, State) ->
-    try Module:init(State, Options) of
+call(Module, Options, State) when is_atom(Module) ->
+    call(fun Module:init/2, Options, State);
+call(Callback, Options, State) when is_function(Callback, 2) ->
+    try Callback(State, Options) of
         {ok, Data} ->
             rodent:send(Data, State),
             {stop, normal, State};

@@ -3,11 +3,11 @@ pkgver=0.0.1
 pkgrel=1
 pkgdesc="rodent gopher server"
 arch=("any")
-url="https://github.com/rymdolle/${pkgname}"
+url="https://github.com/rymdolle"
 depends=("erlang-nox")
 makedepends=("make")
 backup=("etc/$pkgname.conf")
-source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/${pkgver}/${pkgver}.tar.gz"
+source=("$pkgname-$pkgver.tar.gz::gopher://gopher.rymdis.com/$pkgname.tar.gz"
         "rodent.service"
         "rodent.sysusers")
 sha256sums=('SKIP'
@@ -15,8 +15,8 @@ sha256sums=('SKIP'
             '58537bc63cece28cd1da951122099259c427029854042e88e1a1d43f3bc10bb8')
 
 package() {
-    mkdir -p "${pkgdir}/usr/lib/${pkgname}"
-    cp -r bin lib releases "${pkgdir}/usr/lib/${pkgname}"
+    mkdir -p "${pkgdir}/usr/lib/$pkgname"
+    cp -r bin lib releases "${pkgdir}/usr/lib/$pkgname"
 
     # Executable
     mkdir -p "${pkgdir}/usr/bin"
@@ -24,9 +24,9 @@ package() {
 
     # Config file
     mkdir -p "${pkgdir}/etc"
-    mv "${pkgdir}/usr/lib/${pkgname}/releases/${pkgver}/sys.config" "${pkgdir}/etc/rodent.conf"
-    ln -fs  "/etc/rodent.conf" "${pkgdir}/usr/lib/${pkgname}/releases/${pkgver}/sys.config"
+    mv "${pkgdir}/usr/lib/$pkgname/releases/$pkgver/sys.config" "${pkgdir}/etc/$pkgname.conf"
+    ln -fs  "/etc/$pkgname.conf" "${pkgdir}/usr/lib/$pkgname/releases/$pkgver/sys.config"
 
-    install -Dm 644 ${pkgname}.sysusers "${pkgdir}/usr/lib/sysusers.d/${pkgname}.conf"
+    install -Dm 644 ${pkgname}.sysusers "${pkgdir}/usr/lib/sysusers.d/$pkgname.conf"
     install -Dm 644 ${pkgname}.service -t "${pkgdir}/usr/lib/systemd/system"
 }
