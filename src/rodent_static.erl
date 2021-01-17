@@ -29,17 +29,24 @@ init(Req, {priv_file, Application, File}) ->
     Dir = code:priv_dir(Application),
     init(Req, {file, filename:join(Dir, File)});
 init(Req, {dir, Dir}) ->
-    case file:list_dir(Dir) of
-        {ok, Files} ->
-            {ok, [begin
-                      Selector = filename:join(maps:get(selector, Req), File),
-                      case file:read_file_info(filename:join(Dir, File)) of
-                          {ok, #file_info{type = regular}} ->
-                              rodent:file(File, Selector, Req);
-                          {ok, #file_info{type = directory}} ->
-                              rodent:menu(File, Selector, Req)
-                      end
-                  end || File <- Files]};
+    File = filename:join([Dir|maps:get(path, Req)]),
+    case file:read_file_info(File) of
+        {ok, #file_info{type = directory}} ->
+            {ok, Files} = file:list_dir(File),
+            Fun = fun(F, Acc) ->
+                          Selector = filename:join(maps:get(selector, Req), F),
+                          case file:read_file_info(filename:join(File, F)) of
+                              {ok, #file_info{type = regular}} ->
+                                  [rodent:file(F, Selector, Req)|Acc];
+                              {ok, #file_info{type = directory}} ->
+                                  [rodent:menu(F, Selector, Req)|Acc];
+                              _ ->
+                                  Acc
+                          end
+                  end,
+            {ok, lists:foldr(Fun, [], Files)};
+        {ok, #file_info{type = regular, size = Size}} ->
+            {ok, {sendfile, 0, Size, File}};
         {error, enoent} ->
             {ok, rodent:error("Not found", Req)}
     end;
