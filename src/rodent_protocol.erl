@@ -147,7 +147,7 @@ match(Path, [Route|Rest]) ->
         false ->
             match(Path, Rest);
         true ->
-            Route;
+            Route#{path => []};
         {true, PathInfo} ->
             Route#{path => PathInfo}
     end;
@@ -156,6 +156,7 @@ match(_Path, []) -> nomatch.
 match_path([P|Path], [P|Route]) ->
     match_path(Path, Route);
 match_path([], []) -> true;
+match_path([<<>>], []) -> true; % allow trailing slash
 match_path(Path, [<<"*">>]) -> {true, Path};
 match_path(_, _) -> false.
 
