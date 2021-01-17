@@ -89,6 +89,14 @@ select(State = #{selector := <<"URL:", Target/bytes>>}) ->
     {stop, normal, State};
 select(State = #{selector := <<>>}) ->
     select(State#{selector := <<"/">>});
+select(State = #{selector := <<"/">>}) ->
+    {ok, App} = application:get_application(),
+    {ok, Index} = application:get_env(App, index),
+    PrivDir = code:priv_dir(App),
+    File = filename:join(PrivDir, Index),
+    Data = format_file(File, State),
+    rodent:send([Data, ".\r\n"], State),
+    {stop, normal, State};
 select(State = #{selector := Selector, routes := Routes}) ->
     Path = re:split(Selector, "/"),
     case match(Path, Routes) of
@@ -100,6 +108,22 @@ select(State = #{selector := Selector, routes := Routes}) ->
             Module = maps:get(callback, Route),
             Options = maps:get(options, Route, undefined),
             call(Module, Options, State#{path => maps:get(path, Route)})
+    end.
+
+format_file(File, State) ->
+    case file:open(File, [read, binary]) of
+        {ok, Device} ->
+            format_device(Device, State)
+    end.
+
+format_device(Device, State) ->
+    case file:read_line(Device) of
+        eof ->
+            ok = file:close(Device),
+            [];
+        {ok, Line} ->
+            Part = binary:part(Line, 0, byte_size(Line)-1),
+            [rodent:format(Part, State), "\r\n" | format_device(Device, State)]
     end.
 
 call(Module, Options, State) ->
