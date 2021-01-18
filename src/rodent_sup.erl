@@ -29,8 +29,11 @@ init([]) ->
     {ok, App} = application:get_application(),
     Host = application:get_env(App, host, "localhost"),
     Port = application:get_env(App, port, 70),
-    Routes = [Route#{selector => re:split(maps:get(selector, Route), "/")} ||
-                 Route <- application:get_env(App, routes, [])],
+    %% Sort with longest selector first
+    Routes = lists:sort(fun(#{selector := A}, #{selector := B}) ->
+                                length(A) > length(B)
+                        end, [Route#{selector => re:split(maps:get(selector, Route), "/")} ||
+                                 Route <- application:get_env(App, routes, [])]),
     Options = #{host => Host, port => Port, routes => Routes},
     Listener = ranch:child_spec(App,
                                 ranch_tcp, [{port, Port}],
