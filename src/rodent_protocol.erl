@@ -107,47 +107,19 @@ select(State = #{selector := Selector, routes := Routes}) ->
     case match(re:split(Selector, "/"), Routes) of
         nomatch ->
             Data = rodent:error("Not found", State),
-            rodent:send(Data, State),
-            {stop, normal, State};
-        #{data := {file, File}} ->
-            rodent:send({sendfile, File}, State),
-            {stop, normal, State};
-        #{data := {format_file, File}} ->
-            Data = format_file(File, State),
-            rodent:send(Data, State),
-            {stop, normal, State};
-        #{data := Data} ->
-            rodent:send(Data, State),
-            {stop, normal, State};
+            rodent:send(Data, State);
         #{path_info := PathInfo, callback := Callback, args := Args} ->
             call(Callback, Args, State#{path_info => PathInfo})
-    end.
-
-format_file(File, State) ->
-    case file:open(File, [read, binary]) of
-        {ok, Device} ->
-            format_device(Device, State)
-    end.
-
-format_device(Device, State) ->
-    case file:read_line(Device) of
-        eof ->
-            ok = file:close(Device),
-            [];
-        {ok, Line} ->
-            Part = binary:part(Line, 0, byte_size(Line)-1),
-            [rodent:format(Part, State), "\r\n" | format_device(Device, State)]
-    end.
+    end,
+    {stop, normal, State}.
 
 call(Module, Options, State) when is_atom(Module) ->
     call(fun Module:init/2, Options, State);
 call(Callback, Options, State) when is_function(Callback, 2) ->
     try Callback(State, Options) of
+        ok -> ok;
         {ok, Data} ->
-            rodent:send(Data, State),
-            {stop, normal, State};
-        ok ->
-            {stop, normal, State};
+            rodent:send(Data, State);
         {swap, NewModule, NewOptions} ->
             call(NewModule, NewOptions, State)
     catch Error:Reason:Stacktrace ->

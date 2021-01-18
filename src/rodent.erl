@@ -55,9 +55,28 @@ url(Name, Target, #{host := Host, port := Port}) ->
 error(Message, #{host := Host, port := Port}) ->
     io_lib:format("3~s\t\t~s\t~b\r\n.\r\n", [Message, Host, Port]).
 
+send({format, {priv_file, Application, File}}, State) ->
+    Dir = code:priv_dir(Application),
+    send({format, {file, filename:join(Dir, File)}}, State);
+send({format, {file, File}}, State) ->
+    case file:open(File, [read, binary]) of
+        {ok, Device} ->
+            format_send(Device, State)
+    end;
 send({sendfile, Offset, Size, File}, #{socket := Socket, transport := Transport}) ->
     Transport:sendfile(Socket, File, Offset, Size);
 send({sendfile, File}, #{socket := Socket, transport := Transport}) ->
     Transport:sendfile(Socket, File);
 send(Data, #{socket := Socket, transport := Transport}) ->
     Transport:send(Socket, Data).
+
+format_send(Device, State) ->
+    case file:read_line(Device) of
+        eof ->
+            file:close(Device);
+        {ok, Line} ->
+            Part = binary:part(Line, 0, byte_size(Line)-1),
+            Data = [format(Part, State), "\r\n"],
+            send(Data, State),
+            format_send(Device, State)
+    end.

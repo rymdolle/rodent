@@ -18,6 +18,8 @@
 
 -export([init/2]).
 
+init(_Req, {format, File}) ->
+    {ok, {format, File}};
 init(Req, {file, File}) ->
     case file:read_file_info(File) of
         {ok, #file_info{type = regular, size = Size}} ->
@@ -50,6 +52,9 @@ init(Req, {dir, Dir}) ->
         {error, enoent} ->
             {ok, rodent:error("Not found", Req)}
     end;
+init(Req, priv_dir) ->
+    {ok, Application} = application:get_application(),
+    init(Req, {priv_dir, Application});
 init(Req, {priv_dir, Application}) ->
     init(Req, {priv_dir, Application, ""});
 init(Req = #{path_info := []}, {priv_dir, Application, Dir}) ->
