@@ -10,6 +10,5 @@ i (O,O)		%h	%p
 i (   ) under construction		%h	%p
 i -"-"---------------------		%h	%p
 i		%h	%p
-9rodent.tar	/rodent.tar	%h	%p
 9rodent.tar.gz	/rodent.tar.gz	%h	%p
 hgithub.com/rymdolle	URL:https://github.com/rymdolle	%h	%p
