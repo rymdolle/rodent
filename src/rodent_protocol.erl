@@ -103,25 +103,24 @@ select(State = #{selector := <<"URL:", Target/bytes>>}) ->
     {stop, normal, State};
 select(State = #{selector := <<>>}) ->
     select(State#{selector := <<"/">>});
-select(State = #{selector := <<"/">>}) ->
-    {ok, App} = application:get_application(),
-    {ok, Index} = application:get_env(App, index),
-    PrivDir = code:priv_dir(App),
-    File = filename:join(PrivDir, Index),
-    Data = format_file(File, State),
-    rodent:send([Data, ".\r\n"], State),
-    {stop, normal, State};
 select(State = #{selector := Selector, routes := Routes}) ->
-    Path = re:split(Selector, "/"),
-    case match(Path, Routes) of
+    case match(re:split(Selector, "/"), Routes) of
         nomatch ->
             Data = rodent:error("Not found", State),
             rodent:send(Data, State),
             {stop, normal, State};
-        Route ->
-            Callback = maps:get(callback, Route),
-            Args = maps:get(args, Route, undefined),
-            call(Callback, Args, State#{path => maps:get(path, Route)})
+        #{data := {file, File}} ->
+            rodent:send({sendfile, File}, State),
+            {stop, normal, State};
+        #{data := {format_file, File}} ->
+            Data = format_file(File, State),
+            rodent:send(Data, State),
+            {stop, normal, State};
+        #{data := Data} ->
+            rodent:send(Data, State),
+            {stop, normal, State};
+        #{path_info := PathInfo, callback := Callback, args := Args} ->
+            call(Callback, Args, State#{path_info => PathInfo})
     end.
 
 format_file(File, State) ->
@@ -158,23 +157,23 @@ call(Callback, Options, State) when is_function(Callback, 2) ->
     end.
 
 
-match(Path, [Route|Rest]) ->
-    case match_path(Path, maps:get(path, Route)) of
+match(Selector, [Route|Rest]) ->
+    case match_selector(Selector, maps:get(selector, Route)) of
         false ->
-            match(Path, Rest);
+            match(Selector, Rest);
         true ->
-            Route#{path => []};
+            Route#{path_info => []};
         {true, PathInfo} ->
-            Route#{path => PathInfo}
+            Route#{path_info => PathInfo}
     end;
-match(_Path, []) -> nomatch.
+match(_Selector, []) -> nomatch.
 
-match_path([P|Path], [P|Route]) ->
-    match_path(Path, Route);
-match_path([], []) -> true;
-match_path([<<>>], []) -> true; % allow trailing slash
-match_path(Path, [<<"*">>]) -> {true, Path};
-match_path(_, _) -> false.
+match_selector([Match|Selector], [Match|Route]) ->
+    match_selector(Selector, Route);
+match_selector([], []) -> true;
+match_selector([<<>>], []) -> true; % allow trailing slash
+match_selector(Rest, [<<"*">>]) -> {true, Rest};
+match_selector(_, _) -> false.
 
 
 search(State) ->

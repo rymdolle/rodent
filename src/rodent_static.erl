@@ -29,7 +29,7 @@ init(Req, {priv_file, Application, File}) ->
     Dir = code:priv_dir(Application),
     init(Req, {file, filename:join(Dir, File)});
 init(Req, {dir, Dir}) ->
-    File = filename:join([Dir|maps:get(path, Req)]),
+    File = filename:join([Dir|maps:get(path_info, Req)]),
     case file:read_file_info(File) of
         {ok, #file_info{type = directory}} ->
             {ok, Files} = file:list_dir(File),
@@ -52,10 +52,10 @@ init(Req, {dir, Dir}) ->
     end;
 init(Req, {priv_dir, Application}) ->
     init(Req, {priv_dir, Application, ""});
-init(Req = #{path := []}, {priv_dir, Application, Dir}) ->
+init(Req = #{path_info := []}, {priv_dir, Application, Dir}) ->
     PrivDir = code:priv_dir(Application),
     init(Req, {dir, filename:join(PrivDir, Dir)});
-init(Req = #{path := Path}, {priv_dir, Application, Dir}) ->
+init(Req = #{path_info := Path}, {priv_dir, Application, Dir}) ->
     PrivDir = code:priv_dir(Application),
     Target = filename:join(Path),
     File = filename:join([PrivDir, Dir, Target]),

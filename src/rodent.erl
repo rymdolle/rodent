@@ -57,5 +57,7 @@ error(Message, #{host := Host, port := Port}) ->
 
 send({sendfile, Offset, Size, File}, #{socket := Socket, transport := Transport}) ->
     Transport:sendfile(Socket, File, Offset, Size);
+send({sendfile, File}, #{socket := Socket, transport := Transport}) ->
+    Transport:sendfile(Socket, File);
 send(Data, #{socket := Socket, transport := Transport}) ->
     Transport:send(Socket, Data).

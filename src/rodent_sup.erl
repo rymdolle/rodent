@@ -29,7 +29,7 @@ init([]) ->
     {ok, App} = application:get_application(),
     Host = application:get_env(App, host, "localhost"),
     Port = application:get_env(App, port, 70),
-    Routes = [Route#{path => re:split(maps:get(path, Route), "/")} ||
+    Routes = [Route#{selector => re:split(maps:get(selector, Route), "/")} ||
                  Route <- application:get_env(App, routes, [])],
     Options = #{host => Host, port => Port, routes => Routes},
     Listener = ranch:child_spec(App,
