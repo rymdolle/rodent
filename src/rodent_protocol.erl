@@ -50,8 +50,11 @@ handle_info({tcp_closed, Socket}, State = #{socket := Socket}) ->
     {stop, {shutdown, closed}, State};
 handle_info({tcp_error, Socket, Reason}, State = #{socket := Socket}) ->
     {stop, Reason, State};
-handle_info({tcp, Socket, Data}, State = #{socket := Socket}) ->
-    Buffer = maps:get(buffer, State),
+handle_info({tcp, Socket, Data}, State = #{buffer := Buffer, socket := Socket})
+  when byte_size(Buffer) + byte_size(Data) > 16#4000 ->
+    %% Close connection if selector line is longer than 16kB
+    {stop, {shutdown, badselector}, State};
+handle_info({tcp, Socket, Data}, State = #{buffer := Buffer, socket := Socket}) ->
     parse(State#{buffer => <<Buffer/bytes, Data/bytes>>}).
 
 terminate(normal, State) ->
