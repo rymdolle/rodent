@@ -7,7 +7,7 @@ url="https://github.com/rymdolle"
 depends=("erlang-nox")
 makedepends=("make")
 backup=("etc/$pkgname.conf")
-source=("$pkgname-$pkgver.tar.gz::gopher://gopher.rymdis.com/$pkgname.tar.gz"
+source=("$pkgname-$pkgver.tar.gz::gopher://gopher.rymdis.com/9/latest.tar.gz"
         "rodent.service"
         "rodent.sysusers")
 sha256sums=('SKIP'
