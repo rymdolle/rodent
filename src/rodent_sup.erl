@@ -36,7 +36,7 @@ init([]) ->
                                  Route <- application:get_env(App, routes, [])]),
     Options = #{host => Host, port => Port, routes => Routes},
     Listener = ranch:child_spec(App,
-                                ranch_tcp, [{port, Port}],
+                                ranch_tcp, [inet, inet6, {port, Port}],
                                 rodent_protocol, Options),
     SupFlags = #{strategy => one_for_all,
                  intensity => 1,
