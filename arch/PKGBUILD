@@ -3,18 +3,25 @@ pkgver=0.0.1
 pkgrel=1
 pkgdesc="rodent gopher server"
 arch=("any")
-url="https://github.com/rymdolle"
+url="https://github.com/rymdolle/rodent"
+license=("Apache")
 depends=("erlang-nox")
-makedepends=("make")
+makedepends=("rebar3")
 backup=("etc/$pkgname.conf")
-source=("$pkgname-$pkgver.tar.gz::gopher://gopher.rymdis.com/9/latest.tar.gz"
+source=("git+https://github.com/rymdolle/rodent.git"
         "rodent.service"
         "rodent.sysusers")
 sha256sums=('SKIP'
             '2189d95f143940f12d7e73f3450e43aca60b7f609cf4959aba2f29394083b128'
             '58537bc63cece28cd1da951122099259c427029854042e88e1a1d43f3bc10bb8')
 
+build() {
+    cd $pkgname
+    rebar3 as prod release -o ..
+}
+
 package() {
+    cd $pkgname
     mkdir -p "${pkgdir}/usr/lib/$pkgname"
     cp -r bin lib releases "${pkgdir}/usr/lib/$pkgname"
 
@@ -27,6 +34,6 @@ package() {
     mv "${pkgdir}/usr/lib/$pkgname/releases/$pkgver/sys.config" "${pkgdir}/etc/$pkgname.conf"
     ln -fs  "/etc/$pkgname.conf" "${pkgdir}/usr/lib/$pkgname/releases/$pkgver/sys.config"
 
-    install -Dm 644 ${pkgname}.sysusers "${pkgdir}/usr/lib/sysusers.d/$pkgname.conf"
-    install -Dm 644 ${pkgname}.service -t "${pkgdir}/usr/lib/systemd/system"
+    install -Dm 644 $srcdir/${pkgname}.sysusers "${pkgdir}/usr/lib/sysusers.d/$pkgname.conf"
+    install -Dm 644 $srcdir/${pkgname}.service -t "${pkgdir}/usr/lib/systemd/system"
 }
