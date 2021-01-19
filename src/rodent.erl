@@ -73,7 +73,8 @@ send(Data, #{socket := Socket, transport := Transport}) ->
 format_send(Device, State) ->
     case file:read_line(Device) of
         eof ->
-            file:close(Device);
+            file:close(Device),
+            send(".\r\n", State);
         {ok, Line} ->
             Part = binary:part(Line, 0, byte_size(Line)-1),
             Data = [format(Part, State), "\r\n"],
