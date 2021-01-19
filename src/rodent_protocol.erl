@@ -161,5 +161,5 @@ access_log(Req = #{selector := Selector, socket := Socket, transport := Transpor
     {ok, {Address, Port}} = Transport:peername(Socket),
     {ok, [{send_oct, TX}]} = Transport:getstat(Socket, [send_oct]),
     {ok, [{recv_oct, RX}]} = Transport:getstat(Socket, [recv_oct]),
-    logger:notice("~15s:~-5b rx:~b,tx:~b ~s ~s",
+    logger:notice("~s:~-5b rx:~b,tx:~b ~s ~s",
                   [inet:ntoa(Address), Port, RX, TX, Selector, Query]).
