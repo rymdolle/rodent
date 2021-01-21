@@ -17,13 +17,13 @@
 -export([init/2]).
 -export([tree/2]).
 
-init(Req = #{path := []}, Dir) ->
-    init(Req#{path := [<<>>]}, Dir);
-init(Req = #{path := [<<>>]}, _Dir) ->
+init(Req = #{path_info := []}, Dir) ->
+    init(Req#{path_info := [<<>>]}, Dir);
+init(Req = #{path_info := [<<>>]}, _Dir) ->
     {ok, rodent:error("Not found", Req)};
-init(Req = #{path := [Name]}, Dir) ->
-    init(Req#{path => [Name, "master^{tree}"]}, Dir);
-init(Req = #{path := [Name, <<"archive">>, _]}, Dir) ->
+init(Req = #{path_info := [Name]}, Dir) ->
+    init(Req#{path_info => [Name, <<"master^{tree}">>]}, Dir);
+init(Req = #{path_info := [Name, <<"archive.tar">>|_]}, Dir) ->
     Repo = filename:join(Dir, Name),
     case filelib:is_dir(Repo) of
         true ->
@@ -31,7 +31,7 @@ init(Req = #{path := [Name, <<"archive">>, _]}, Dir) ->
         false ->
             {ok, rodent:error("Not found", Req)}
     end;
-init(Req = #{path := [Name, Id]}, Dir) ->
+init(Req = #{path_info := [Name, Id]}, Dir) ->
     Repo = filename:join(Dir, Name),
     case filelib:is_dir(Repo) of
         true ->
