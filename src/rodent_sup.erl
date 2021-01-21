@@ -32,8 +32,7 @@ init([]) ->
     %% Sort with longest selector first
     Routes = lists:sort(fun(#{selector := A}, #{selector := B}) ->
                                 length(A) > length(B)
-                        end, [Route#{selector => re:split(maps:get(selector, Route), "/")} ||
-                                 Route <- application:get_env(App, routes, [])]),
+                        end, routes(application:get_env(App, routes, []))),
     Options = #{host => Host, port => Port, routes => Routes},
     Listener = ranch:child_spec(App,
                                 ranch_tcp, [inet, inet6, {port, Port}],
@@ -44,4 +43,10 @@ init([]) ->
     Procs = [Listener],
     {ok, {SupFlags, Procs}}.
 
+
 %% internal functions
+
+routes([Route = #{selector := Selector}|Rest])
+  when is_map_key(callback, Route), is_map_key(args, Route) ->
+    [Route#{selector => re:split(Selector, "/")} | routes(Rest)];
+routes([]) -> [].
