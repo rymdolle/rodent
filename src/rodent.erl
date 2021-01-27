@@ -16,6 +16,7 @@
 
 -export([start/0]).
 -export([format/2]).
+-export([encode/4, encode/5]).
 -export([info/2, file/3, menu/3, bin/3, url/3, error/2]).
 -export([send/2]).
 
@@ -34,27 +35,32 @@ format(<<C,Rest/bytes>>, State) ->
     [C|format(Rest, State)].
 
 
+encode(Type, Description, Selector, #{host := Host, port := Port}) ->
+    encode(Type, Description, Selector, Host, Port).
 encode(Type, Description, Selector, Host, Port) ->
     io_lib:format("~c~s\t~s\t~s\t~b\r\n", [Type, Description, Selector, Host, Port]).
 
-info(Message, #{host := Host, port := Port}) ->
-    encode($i, Message, "", Host, Port).
+info(Message, State) ->
+    encode($i, Message, "", State).
 
-file(Name, Selector, #{host := Host, port := Port}) ->
-    encode($0, Name, Selector, Host, Port).
+file(Name, Selector, State) ->
+    encode($0, Name, Selector, State).
 
-menu(Name, Selector, #{host := Host, port := Port}) ->
-    encode($1, Name, Selector, Host, Port).
+menu(Name, Selector, State) ->
+    encode($1, Name, Selector, State).
 
-bin(Name, Selector, #{host := Host, port := Port}) ->
-    encode($9, Name, Selector, Host, Port).
+bin(Name, Selector, State) ->
+    encode($9, Name, Selector, State).
 
-url(Name, Target, #{host := Host, port := Port}) ->
-    encode($h, Name, ["URL:",Target], Host, Port).
+url(Name, Target, State) ->
+    encode($h, Name, ["URL:",Target], State).
 
-error(Message, #{host := Host, port := Port}) ->
-    io_lib:format("3~s\t\t~s\t~b\r\n.\r\n", [Message, Host, Port]).
+error(Message, State) ->
+    encode($3, Message, "", State).
 
+send({format, {data, Format}}, State) ->
+    Data = format(Format, State),
+    send(Data, State);
 send({format, {priv_file, Application, File}}, State) ->
     Dir = code:priv_dir(Application),
     send({format, {file, filename:join(Dir, File)}}, State);

@@ -18,6 +18,8 @@
 
 -export([init/2]).
 
+init(_Req, {data, Data}) ->
+    {ok, Data};
 init(_Req, {format, File}) ->
     {ok, {format, File}};
 init(Req, {file, File}) ->
