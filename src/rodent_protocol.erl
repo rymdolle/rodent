@@ -59,8 +59,8 @@ handle_info({tcp, Socket, Data}, State = #{buffer := Buffer, socket := Socket}) 
 
 terminate(normal, State) ->
     access_log(State);
-terminate(_Reason, _State) ->
-    ok.
+terminate(Reason, State) ->
+    error_log(State, Reason).
 
 
 %%% Internal functions
@@ -163,3 +163,7 @@ access_log(Req = #{selector := Selector, socket := Socket, transport := Transpor
     {ok, [{recv_oct, RX}]} = Transport:getstat(Socket, [recv_oct]),
     logger:notice("~s:~-5b rx:~b,tx:~b ~s ~s",
                   [inet:ntoa(Address), Port, RX, TX, Selector, Query]).
+
+error_log(#{socket := Socket, transport := Transport}, Reason) ->
+    {ok, {Address, Port}} = Transport:peername(Socket),
+    logger:notice("~s:~-5b ~p", [inet:ntoa(Address), Port, Reason]).
