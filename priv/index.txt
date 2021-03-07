@@ -1,14 +1,1 @@
-i _______    ____  ____ ____    ____ ________   _____  _______		%host%	%port%
-i|_   __ \  |_  _||_  _|_   \  /   _|_   ___ \.|_   _|/  ___  |		%host%	%port%
-i  | |__) |   \ \  / /   |   \/   |   | |   \. \ | | |  (__ \_|		%host%	%port%
-i  |  __ /     \ \/ /    | |\  /| |   | |    | | | |  '.___\-.		%host%	%port%
-i _| |  \ \_   _|  |_   _| |_\/_| |_ _| |___.' /_| |_|\\____) |		%host%	%port%
-i|____| |___| |______| |_____||_____|________.'|_____|_______.'		%host%	%port%
-i		%host%	%port%
-i  ^ ^		%host%	%port%
-i (O,O)		%host%	%port%
-i (   ) under construction		%host%	%port%
-i -"-"---------------------		%host%	%port%
-i		%host%	%port%
-9rodent.tar.gz	/rodent.tar.gz	%host%	%port%
-hgithub.com/rymdolle	URL:https://github.com/rymdolle	%host%	%port%
+iSite is working		%host%	%port%
