@@ -31,10 +31,12 @@ start_link(Ref, Transport, Options) ->
 
 init([Ref, Transport, Options]) ->
     {ok, Socket} = ranch:handshake(Ref),
+    {ok, Peer} = Transport:peername(Socket),
     Transport:setopts(Socket, [{active, true}]),
     State = Options#{
                      socket => Socket,
                      transport => Transport,
+                     peer => Peer,
                      buffer => <<>>,
                      routes => maps:get(routes, Options, [])
                     },
@@ -156,14 +158,15 @@ search(State) ->
     rodent:send(Data, State),
     {stop, normal, State}.
 
-access_log(Req = #{selector := Selector, socket := Socket, transport := Transport}) ->
+access_log(Req = #{selector := Selector,
+                   peer := {Address, Port},
+                   socket := Socket,
+                   transport := Transport}) ->
     Query = maps:get(query, Req, <<>>),
-    {ok, {Address, Port}} = Transport:peername(Socket),
     {ok, [{send_oct, TX}]} = Transport:getstat(Socket, [send_oct]),
     {ok, [{recv_oct, RX}]} = Transport:getstat(Socket, [recv_oct]),
     logger:notice("~s:~-5b rx:~b,tx:~b ~s ~s",
                   [inet:ntoa(Address), Port, RX, TX, Selector, Query]).
 
-error_log(#{socket := Socket, transport := Transport}, Reason) ->
-    {ok, {Address, Port}} = Transport:peername(Socket),
+error_log(#{peer := {Address, Port}}, Reason) ->
     logger:notice("~s:~-5b ~p", [inet:ntoa(Address), Port, Reason]).
