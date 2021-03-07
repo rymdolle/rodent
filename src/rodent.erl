@@ -26,11 +26,20 @@ start() ->
 format(<<>>, _State) -> [];
 format(<<"%%", Rest/bytes>>, State) ->
     [$% | format(Rest, State)];
-format(<<"%h", Rest/bytes>>, State) ->
+format(<<"%host%", Rest/bytes>>, State) ->
     [maps:get(host, State)|format(Rest, State)];
-format(<<"%p", Rest/bytes>>, State) ->
+format(<<"%port%", Rest/bytes>>, State) ->
     Port = maps:get(port, State),
     [integer_to_list(Port)|format(Rest, State)];
+format(<<"%time%", Rest/bytes>>, State) ->
+    Time = erlang:universaltime(),
+    [io_lib:format("~p", [Time]) | format(Rest, State)];
+format(<<"%version%", Rest/bytes>>, State) ->
+    {ok, Version} = application:get_key(rodent, vsn),
+    [Version | format(Rest, State)];
+format(<<"%application%", Rest/bytes>>, State) ->
+    {ok, Application} = application:get_application(rodent),
+    [atom_to_binary(Application) | format(Rest, State)];
 format(<<C,Rest/bytes>>, State) ->
     [C|format(Rest, State)].
 

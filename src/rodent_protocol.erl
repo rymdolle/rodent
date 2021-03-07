@@ -108,6 +108,10 @@ select(State = #{selector := <<"URL:", Target/bytes>>}) ->
     {stop, normal, State};
 select(State = #{selector := <<>>}) ->
     select(State#{selector := <<"/">>});
+select(State = #{selector := <<"serverinfo">>}) ->
+    Data = rodent:format(<<"%application%: %version%">>, State),
+    rodent:send(Data, State),
+    {stop, normal, State};
 select(State = #{selector := Selector, routes := Routes}) ->
     case match(re:split(Selector, "/"), Routes) of
         nomatch ->
