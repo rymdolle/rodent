@@ -75,8 +75,12 @@ parse(State = #{buffer := Buffer}) ->
     parse_selector(Buffer, <<>>, State#{buffer => <<>>}).
 
 parse_selector(<<"\r\n", Rest/bytes>>, Acc, State) ->
-    Selector = uri_string:normalize(#{path => Acc}),
-    select(State#{selector => Selector, buffer => Rest});
+    case uri_string:normalize(#{path => Acc}) of
+        {error, Reason, Extra} ->
+            {stop, {Reason, Extra}, State};
+        Selector ->
+            select(State#{selector => Selector, buffer => Rest})
+    end;
 parse_selector(<<"\t", Rest/bytes>>, Acc, State) ->
     Selector = uri_string:normalize(#{path => Acc}),
     parse_query(Rest, <<>>, State#{selector => Selector});
