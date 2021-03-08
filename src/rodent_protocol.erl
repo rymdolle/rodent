@@ -173,8 +173,8 @@ access_log(Req = #{selector := Selector,
     Query = maps:get(query, Req, <<>>),
     {ok, [{send_oct, TX}]} = Transport:getstat(Socket, [send_oct]),
     {ok, [{recv_oct, RX}]} = Transport:getstat(Socket, [recv_oct]),
-    logger:notice("~s:~-5b rx:~b,tx:~b ~s ~s",
+    logger:notice("[~s]:~-5b rx:~b,tx:~b ~s ~s",
                   [inet:ntoa(Address), Port, RX, TX, Selector, Query]).
 
 error_log(#{peer := {Address, Port}}, Reason) ->
-    logger:notice("~s:~-5b ~p", [inet:ntoa(Address), Port, Reason]).
+    logger:notice("[~s]:~-5b ~p", [inet:ntoa(Address), Port, Reason]).
